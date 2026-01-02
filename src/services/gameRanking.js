@@ -252,7 +252,7 @@ export function rankGame(game) {
 /**
  * Rank all games and return top N with league diversity
  */
-export function getTopGames(games, limit = 30) {
+export function getTopGames(games, limit = 30, maxGamesPerLeague = 5) {
   // Add ranking scores to all games
   const rankedGames = games.map(rankGame);
 
@@ -266,7 +266,6 @@ export function getTopGames(games, limit = 30) {
   });
 
   // Apply league diversity: limit games per league to ensure variety
-  const maxGamesPerLeague = 5; // Max games from any single league
   const leagueCounts = {};
   const diverseGames = [];
 

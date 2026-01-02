@@ -170,3 +170,51 @@ export const fetchTopLiveGames = async (limit = 30) => {
   // Rank and return top N
   return getTopGames(liveGames, limit);
 };
+
+/**
+ * Fetch all scores and return top-ranked completed games from today
+ */
+export const fetchTopCompletedGamesToday = async (limit = 10) => {
+  // Fetch all leagues
+  const allResults = await fetchAllScores();
+
+  // Flatten and parse all events, add league context
+  const allGames = [];
+
+  for (const leagueData of allResults) {
+    if (leagueData.events && leagueData.events.length > 0) {
+      const parsedGames = leagueData.events
+        .map(event => {
+          const game = parseGameData(event);
+          if (game) {
+            // Add league context to each game
+            return {
+              ...game,
+              leagueName: leagueData.leagueName,
+              leagueKey: leagueData.leagueKey,
+              sport: leagueData.sport,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      allGames.push(...parsedGames);
+    }
+  }
+
+  // Get today's date range (start and end of day)
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+  const todayEnd = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+  // Filter to only completed games from today
+  const completedGamesToday = allGames.filter(game => {
+    return game.status.completed &&
+           game.date >= todayStart &&
+           game.date <= todayEnd;
+  });
+
+  // Rank and return top N (with diversity limit of 3 per league for completed games)
+  return getTopGames(completedGamesToday, limit, 3);
+};

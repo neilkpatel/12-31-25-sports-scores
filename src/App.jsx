@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { fetchTopLiveGames } from './services/espnApi';
+import { fetchTopLiveGames, fetchTopCompletedGamesToday } from './services/espnApi';
 import GameCard from './components/GameCard';
 import LoadingSpinner from './components/LoadingSpinner';
 
 function App() {
   const [topGames, setTopGames] = useState([]);
+  const [completedGames, setCompletedGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
@@ -12,8 +13,12 @@ function App() {
   const loadScores = async () => {
     try {
       setError(null);
-      const rankedGames = await fetchTopLiveGames(30);
+      const [rankedGames, completedGamesToday] = await Promise.all([
+        fetchTopLiveGames(30),
+        fetchTopCompletedGamesToday(10)
+      ]);
       setTopGames(rankedGames);
+      setCompletedGames(completedGamesToday);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to load scores:', err);
@@ -48,7 +53,7 @@ function App() {
             <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
               <div>
                 <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                  Live Sports Scores
+                  Neil's Prioritized Sports
                 </h1>
                 <div className="flex items-center gap-4 flex-wrap">
                   {lastUpdated && (
@@ -107,27 +112,46 @@ function App() {
                 Try Again
               </button>
             </div>
-          ) : liveCount === 0 ? (
-            <div className="bg-white rounded-lg shadow-md p-8 text-center">
-              <p className="text-gray-600 text-lg mb-2">No live games right now</p>
-              <p className="text-gray-500 text-sm">Check back later or click refresh to update</p>
-            </div>
           ) : (
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                Top {topGames.length} Games Right Now
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                {topGames.map((game, index) => (
-                  <GameCard key={game.id} game={game} rank={index + 1} />
-                ))}
-              </div>
+            <div className="space-y-8">
+              {/* Live Games Section */}
+              {liveCount === 0 ? (
+                <div className="bg-white rounded-lg shadow-md p-8 text-center">
+                  <p className="text-gray-600 text-lg mb-2">No live games right now</p>
+                  <p className="text-gray-500 text-sm">Check back later or click refresh to update</p>
+                </div>
+              ) : (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                    🔴 Top {topGames.length} Games Live Now
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {topGames.map((game, index) => (
+                      <GameCard key={game.id} game={game} rank={index + 1} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Completed Games Section */}
+              {completedGames.length > 0 && (
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                    ✅ Top {completedGames.length} Completed Games Today
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    {completedGames.map((game, index) => (
+                      <GameCard key={game.id} game={game} rank={index + 1} />
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </main>
 
         <footer className="mt-12 text-center text-gray-500 text-sm">
-          <p>Showing top 30 live games ranked by importance. Data provided by ESPN. Updates every 60 seconds.</p>
+          <p>Showing top games ranked by importance (playoffs, broadcasts, team quality, rivalries). Data provided by ESPN. Updates every 60 seconds.</p>
         </footer>
       </div>
     </div>
