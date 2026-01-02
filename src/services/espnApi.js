@@ -1,10 +1,19 @@
 const ESPN_API_BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 
 const LEAGUES = {
+  // Professional Sports
   NFL: { sport: 'football', league: 'nfl', name: 'NFL' },
   NBA: { sport: 'basketball', league: 'nba', name: 'NBA' },
   MLB: { sport: 'baseball', league: 'mlb', name: 'MLB' },
   NHL: { sport: 'hockey', league: 'nhl', name: 'NHL' },
+  WNBA: { sport: 'basketball', league: 'wnba', name: 'WNBA' },
+
+  // College Sports
+  NCAAF: { sport: 'football', league: 'college-football', name: 'College Football' },
+  NCAAMB: { sport: 'basketball', league: 'mens-college-basketball', name: "Men's College Basketball" },
+  NCAAWB: { sport: 'basketball', league: 'womens-college-basketball', name: "Women's College Basketball" },
+
+  // Soccer
   MLS: { sport: 'soccer', league: 'usa.1', name: 'MLS' },
   EPL: { sport: 'soccer', league: 'eng.1', name: 'Premier League' },
   LALIGA: { sport: 'soccer', league: 'esp.1', name: 'La Liga' },
@@ -12,6 +21,10 @@ const LEAGUES = {
   SERIEA: { sport: 'soccer', league: 'ita.1', name: 'Serie A' },
   LIGUE1: { sport: 'soccer', league: 'fra.1', name: 'Ligue 1' },
   UCL: { sport: 'soccer', league: 'uefa.champions', name: 'Champions League' },
+  LIGAMX: { sport: 'soccer', league: 'mex.1', name: 'Liga MX' },
+
+  // Combat Sports
+  UFC: { sport: 'mma', league: 'ufc', name: 'UFC' },
 };
 
 export const fetchScoresForLeague = async (leagueKey) => {
