@@ -1,9 +1,40 @@
-// Scoring weights (total = 100 points possible)
+// Scoring weights (total = 100 points possible + league prestige bonus)
 const WEIGHTS = {
   PLAYOFF_STATUS: 40,
   BROADCAST: 25,
   TEAM_QUALITY: 20,
   CONTEXT: 15,
+  LEAGUE_PRESTIGE: 20, // New: bonus for major leagues
+};
+
+// League prestige tiers (bonus points)
+const LEAGUE_PRESTIGE = {
+  // Tier 1: Major Professional Leagues (20 points)
+  NBA: 20,
+  NFL: 20,
+  NHL: 20,
+  MLB: 20,
+
+  // Tier 2: Premier International Soccer (18 points)
+  EPL: 18,
+  LALIGA: 18,
+  BUNDESLIGA: 18,
+  SERIEA: 18,
+  UCL: 18,
+
+  // Tier 3: Other Pro Leagues (15 points)
+  MLS: 15,
+  WNBA: 15,
+  UFC: 15,
+  LIGUE1: 15,
+  LIGAMX: 15,
+
+  // Tier 4: Major College (only when ranked) (10 points)
+  NCAAF: 10,
+  NCAAMB: 10,
+
+  // Tier 5: Other College (5 points)
+  NCAAWB: 5,
 };
 
 // Broadcast tier scoring
@@ -186,6 +217,32 @@ function calculateTeamQualityScore(game) {
 }
 
 /**
+ * Calculate league prestige score (0-20 points)
+ */
+function calculateLeaguePrestigeScore(game) {
+  const leagueKey = game.leagueKey;
+  let baseScore = LEAGUE_PRESTIGE[leagueKey] || 0;
+
+  // For college sports, reduce score if teams aren't ranked
+  if (leagueKey === 'NCAAF' || leagueKey === 'NCAAMB') {
+    const { homeTeam, awayTeam } = game;
+    const homeRank = homeTeam.rank;
+    const awayRank = awayTeam.rank;
+
+    // If neither team is ranked, drastically reduce college game importance
+    if (!homeRank && !awayRank) {
+      baseScore = 2; // Very low priority for unranked college games
+    }
+    // If only one team ranked and it's not top 25
+    else if ((!homeRank || homeRank > 25) && (!awayRank || awayRank > 25)) {
+      baseScore = 4; // Low priority
+    }
+  }
+
+  return baseScore;
+}
+
+/**
  * Calculate contextual importance score (0-15 points)
  */
 function calculateContextScore(game) {
@@ -234,8 +291,9 @@ export function rankGame(game) {
   const broadcastScore = calculateBroadcastScore(game);
   const teamQualityScore = calculateTeamQualityScore(game);
   const contextScore = calculateContextScore(game);
+  const leaguePrestigeScore = calculateLeaguePrestigeScore(game);
 
-  const totalScore = playoffScore + broadcastScore + teamQualityScore + contextScore;
+  const totalScore = playoffScore + broadcastScore + teamQualityScore + contextScore + leaguePrestigeScore;
 
   return {
     ...game,
@@ -245,6 +303,7 @@ export function rankGame(game) {
       broadcast: broadcastScore,
       teamQuality: teamQualityScore,
       context: contextScore,
+      leaguePrestige: leaguePrestigeScore,
     },
   };
 }
