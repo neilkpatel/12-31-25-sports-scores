@@ -1,6 +1,6 @@
 import React from 'react';
 
-const GameCard = ({ game }) => {
+const GameCard = ({ game, rank }) => {
   const { homeTeam, awayTeam, status } = game;
 
   const getStatusBadge = () => {
@@ -44,10 +44,20 @@ const GameCard = ({ game }) => {
 
   return (
     <div className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-200 p-4 border border-gray-200">
-      <div className="flex justify-between items-center mb-3">
-        <div className="text-xs font-medium text-gray-500">{status.detail}</div>
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center gap-2">
+          {rank && (
+            <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white font-bold text-sm px-2.5 py-1 rounded-md">
+              #{rank}
+            </div>
+          )}
+          <div className="bg-gray-100 text-gray-700 text-xs font-semibold px-2 py-1 rounded truncate max-w-[120px]">
+            {game.leagueName}
+          </div>
+        </div>
         {getStatusBadge()}
       </div>
+      <div className="text-xs font-medium text-gray-500 mb-3">{status.detail}</div>
 
       <div className="space-y-2">
         <div className="flex items-center justify-between">
