@@ -1,3 +1,5 @@
+import { getTopGames } from './gameRanking.js';
+
 const ESPN_API_BASE = 'https://site.api.espn.com/apis/site/v2/sports';
 
 const LEAGUES = {
@@ -128,4 +130,43 @@ export const parseGameData = (event) => {
       conferenceCompetition: competition.conferenceCompetition,
     },
   };
+};
+
+/**
+ * Fetch all scores and return top-ranked live games
+ */
+export const fetchTopLiveGames = async (limit = 30) => {
+  // Fetch all leagues
+  const allResults = await fetchAllScores();
+
+  // Flatten and parse all events, add league context
+  const allGames = [];
+
+  for (const leagueData of allResults) {
+    if (leagueData.events && leagueData.events.length > 0) {
+      const parsedGames = leagueData.events
+        .map(event => {
+          const game = parseGameData(event);
+          if (game) {
+            // Add league context to each game
+            return {
+              ...game,
+              leagueName: leagueData.leagueName,
+              leagueKey: leagueData.leagueKey,
+              sport: leagueData.sport,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      allGames.push(...parsedGames);
+    }
+  }
+
+  // Filter to only live games
+  const liveGames = allGames.filter(game => game.status.inProgress);
+
+  // Rank and return top N
+  return getTopGames(liveGames, limit);
 };
