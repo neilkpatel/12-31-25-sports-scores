@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { fetchAllScores } from './services/espnApi';
-import LeagueSection from './components/LeagueSection';
+import { fetchTopLiveGames } from './services/espnApi';
+import GameCard from './components/GameCard';
 import LoadingSpinner from './components/LoadingSpinner';
 
 function App() {
-  const [scores, setScores] = useState([]);
+  const [topGames, setTopGames] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
@@ -12,8 +12,8 @@ function App() {
   const loadScores = async () => {
     try {
       setError(null);
-      const data = await fetchAllScores();
-      setScores(data);
+      const rankedGames = await fetchTopLiveGames(30);
+      setTopGames(rankedGames);
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to load scores:', err);
@@ -38,16 +38,7 @@ function App() {
     loadScores();
   };
 
-  const getLiveGamesCount = () => {
-    return scores.reduce((count, league) => {
-      const liveGames = league.events?.filter(event =>
-        event.status?.type?.state === 'in'
-      ).length || 0;
-      return count + liveGames;
-    }, 0);
-  };
-
-  const liveCount = getLiveGamesCount();
+  const liveCount = topGames.length;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
@@ -103,7 +94,7 @@ function App() {
         </header>
 
         <main>
-          {loading && scores.length === 0 ? (
+          {loading && topGames.length === 0 ? (
             <LoadingSpinner />
           ) : error ? (
             <div className="bg-red-50 border-2 border-red-200 rounded-lg p-6 text-center">
@@ -123,15 +114,20 @@ function App() {
             </div>
           ) : (
             <div>
-              {scores.map(leagueData => (
-                <LeagueSection key={leagueData.leagueKey} leagueData={leagueData} />
-              ))}
+              <h2 className="text-2xl font-bold text-gray-800 mb-4">
+                Top {topGames.length} Games Right Now
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                {topGames.map((game, index) => (
+                  <GameCard key={game.id} game={game} rank={index + 1} />
+                ))}
+              </div>
             </div>
           )}
         </main>
 
         <footer className="mt-12 text-center text-gray-500 text-sm">
-          <p>Showing only live games in progress. Data provided by ESPN. Updates every 60 seconds.</p>
+          <p>Showing top 30 live games ranked by importance. Data provided by ESPN. Updates every 60 seconds.</p>
         </footer>
       </div>
     </div>
