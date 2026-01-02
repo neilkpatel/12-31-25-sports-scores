@@ -250,7 +250,7 @@ export function rankGame(game) {
 }
 
 /**
- * Rank all games and return top N
+ * Rank all games and return top N with league diversity
  */
 export function getTopGames(games, limit = 30) {
   // Add ranking scores to all games
@@ -265,6 +265,26 @@ export function getTopGames(games, limit = 30) {
     return a.date.getTime() - b.date.getTime();
   });
 
-  // Return top N
-  return rankedGames.slice(0, limit);
+  // Apply league diversity: limit games per league to ensure variety
+  const maxGamesPerLeague = 5; // Max games from any single league
+  const leagueCounts = {};
+  const diverseGames = [];
+
+  for (const game of rankedGames) {
+    const leagueKey = game.leagueKey || 'unknown';
+    const currentCount = leagueCounts[leagueKey] || 0;
+
+    // If this league hasn't hit the limit, include the game
+    if (currentCount < maxGamesPerLeague) {
+      diverseGames.push(game);
+      leagueCounts[leagueKey] = currentCount + 1;
+
+      // Stop once we have enough games
+      if (diverseGames.length >= limit) {
+        break;
+      }
+    }
+  }
+
+  return diverseGames;
 }
