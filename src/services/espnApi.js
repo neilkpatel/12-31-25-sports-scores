@@ -218,3 +218,53 @@ export const fetchTopCompletedGamesToday = async (limit = 10) => {
   // Rank and return top N (with diversity limit of 3 per league for completed games)
   return getTopGames(completedGamesToday, limit, 3);
 };
+
+/**
+ * Fetch all scores and return top-ranked completed games from yesterday
+ */
+export const fetchTopCompletedGamesYesterday = async (limit = 10) => {
+  // Fetch all leagues
+  const allResults = await fetchAllScores();
+
+  // Flatten and parse all events, add league context
+  const allGames = [];
+
+  for (const leagueData of allResults) {
+    if (leagueData.events && leagueData.events.length > 0) {
+      const parsedGames = leagueData.events
+        .map(event => {
+          const game = parseGameData(event);
+          if (game) {
+            // Add league context to each game
+            return {
+              ...game,
+              leagueName: leagueData.leagueName,
+              leagueKey: leagueData.leagueKey,
+              sport: leagueData.sport,
+            };
+          }
+          return null;
+        })
+        .filter(Boolean);
+
+      allGames.push(...parsedGames);
+    }
+  }
+
+  // Get yesterday's date range
+  const now = new Date();
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStart = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0);
+  const yesterdayEnd = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59);
+
+  // Filter to only completed games from yesterday
+  const completedGamesYesterday = allGames.filter(game => {
+    return game.status.completed &&
+           game.date >= yesterdayStart &&
+           game.date <= yesterdayEnd;
+  });
+
+  // Rank and return top N (with diversity limit of 3 per league for completed games)
+  return getTopGames(completedGamesYesterday, limit, 3);
+};

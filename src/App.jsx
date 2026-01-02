@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { fetchTopLiveGames, fetchTopCompletedGamesToday } from './services/espnApi';
+import { fetchTopLiveGames, fetchTopCompletedGamesToday, fetchTopCompletedGamesYesterday } from './services/espnApi';
 import GameCard from './components/GameCard';
 import LoadingSpinner from './components/LoadingSpinner';
 
 function App() {
   const [topGames, setTopGames] = useState([]);
   const [completedGames, setCompletedGames] = useState([]);
+  const [showingYesterday, setShowingYesterday] = useState(false);
   const [loading, setLoading] = useState(true);
   const [lastUpdated, setLastUpdated] = useState(null);
   const [error, setError] = useState(null);
@@ -17,8 +18,18 @@ function App() {
         fetchTopLiveGames(30),
         fetchTopCompletedGamesToday(10)
       ]);
-      setTopGames(rankedGames);
-      setCompletedGames(completedGamesToday);
+
+      // If no games today (neither live nor completed), fetch yesterday's top 10
+      if (rankedGames.length === 0 && completedGamesToday.length === 0) {
+        const yesterdayGames = await fetchTopCompletedGamesYesterday(10);
+        setCompletedGames(yesterdayGames);
+        setShowingYesterday(true);
+      } else {
+        setTopGames(rankedGames);
+        setCompletedGames(completedGamesToday);
+        setShowingYesterday(false);
+      }
+
       setLastUpdated(new Date());
     } catch (err) {
       console.error('Failed to load scores:', err);
@@ -137,7 +148,11 @@ function App() {
               {completedGames.length > 0 && (
                 <div>
                   <h2 className="text-2xl font-bold text-gray-800 mb-4">
-                    ✅ Top {completedGames.length} Completed Games Today
+                    {showingYesterday ? (
+                      <>📅 Top {completedGames.length} Games from Yesterday</>
+                    ) : (
+                      <>✅ Top {completedGames.length} Completed Games Today</>
+                    )}
                   </h2>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                     {completedGames.map((game, index) => (
