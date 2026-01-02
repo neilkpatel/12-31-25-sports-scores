@@ -83,6 +83,8 @@ export const parseGameData = (event) => {
       score: homeTeam.score,
       record: homeTeam.records?.[0]?.summary,
       winner: homeTeam.winner,
+      rank: homeTeam.curatedRank?.current,
+      seed: homeTeam.seed,
     },
     awayTeam: {
       id: awayTeam.id,
@@ -92,8 +94,25 @@ export const parseGameData = (event) => {
       score: awayTeam.score,
       record: awayTeam.records?.[0]?.summary,
       winner: awayTeam.winner,
+      rank: awayTeam.curatedRank?.current,
+      seed: awayTeam.seed,
     },
     broadcast: competition.broadcasts?.[0]?.names?.[0] || null,
     venue: competition.venue?.fullName,
+    metadata: {
+      seasonType: event.season?.type,
+      bracketRound: competition.bracketRound,
+      playoffRound: competition.playoffRound,
+      neutralSite: competition.neutralSite || false,
+      broadcasts: competition.broadcasts?.map(b => ({
+        market: b.market,
+        names: b.names || [],
+      })) || [],
+      attendance: competition.attendance,
+      venueCapacity: competition.venue?.capacity,
+      notes: competition.notes?.map(n => n.headline) || [],
+      headlines: event.competitions?.[0]?.headlines?.map(h => h.description) || [],
+      conferenceCompetition: competition.conferenceCompetition,
+    },
   };
 };
